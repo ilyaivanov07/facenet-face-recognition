@@ -1,13 +1,7 @@
 from keras import backend as K
-import time
 from multiprocessing.dummy import Pool
 K.set_image_data_format('channels_first')
-import cv2
-import os
 import glob
-import numpy as np
-from numpy import genfromtxt
-import tensorflow as tf
 from fr_utils import *
 from inception_blocks_v2 import *
 import win32com.client as wincl
@@ -18,7 +12,9 @@ windows10_voice_interface = wincl.Dispatch("SAPI.SpVoice")
 
 FRmodel = faceRecoModel(input_shape=(3, 96, 96))
 
+
 def triplet_loss(y_true, y_pred, alpha = 0.3):
+    print ("triplet_loss")
     """
     Implementation of the triplet loss as defined by formula (3)
     
@@ -45,10 +41,14 @@ def triplet_loss(y_true, y_pred, alpha = 0.3):
     
     return loss
 
+
 FRmodel.compile(optimizer = 'adam', loss = triplet_loss, metrics = ['accuracy'])
 load_weights_from_FaceNet(FRmodel)
 
+
 def prepare_database():
+    print ("prepare_database")
+
     database = {}
 
     # load all the images of individuals to recognize into the database
@@ -58,7 +58,10 @@ def prepare_database():
 
     return database
 
+
 def webcam_face_recognizer(database):
+    print ("webcam_face_recognizer")
+
     """
     Runs a loop that extracts images from the computer's webcam and determines whether or not
     it contains the face of a person in our database.
@@ -88,7 +91,10 @@ def webcam_face_recognizer(database):
             break
     cv2.destroyWindow("preview")
 
+
 def process_frame(img, frame, face_cascade):
+    print ("process_frame")
+
     """
     Determine whether the current frame contains the faces of people from our database
     """
@@ -120,7 +126,10 @@ def process_frame(img, frame, face_cascade):
         pool.apply_async(welcome_users, [identities])
     return img
 
+
 def find_identity(frame, x1, y1, x2, y2):
+    print ("find_identity")
+
     """
     Determine whether the face contained within the bounding box exists in our database
 
@@ -136,7 +145,10 @@ def find_identity(frame, x1, y1, x2, y2):
     
     return who_is_it(part_image, database, FRmodel)
 
+
 def who_is_it(image, database, model):
+    print ("who_is_it")
+
     """
     Implements face recognition for the happy house by finding who is the person on the image_path image.
     
@@ -172,7 +184,9 @@ def who_is_it(image, database, model):
     else:
         return str(identity)
 
+
 def welcome_users(identities):
+    print ("welcome_users")
     """ Outputs a welcome audio message to the users """
     global ready_to_detect_identity
     welcome_message = 'Welcome '
@@ -190,9 +204,12 @@ def welcome_users(identities):
     # Allow the program to start detecting identities again
     ready_to_detect_identity = True
 
+
+
 if __name__ == "__main__":
     database = prepare_database()
     webcam_face_recognizer(database)
+
 
 # ### References:
 # 
