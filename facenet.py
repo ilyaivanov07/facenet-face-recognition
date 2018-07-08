@@ -4,11 +4,11 @@ K.set_image_data_format('channels_first')
 import glob
 from fr_utils import *
 from inception_blocks_v2 import *
-import win32com.client as wincl
+# import win32com.client as wincl
 
 PADDING = 50
 ready_to_detect_identity = True
-windows10_voice_interface = wincl.Dispatch("SAPI.SpVoice")
+# windows10_voice_interface = wincl.Dispatch("SAPI.SpVoice")
 
 FRmodel = faceRecoModel(input_shape=(3, 96, 96))
 
@@ -89,7 +89,9 @@ def webcam_face_recognizer(database):
 
         if key == 27: # exit on ESC
             break
+
     cv2.destroyWindow("preview")
+# end webcam_face_recognizer()
 
 
 def process_frame(img, frame, face_cascade):
@@ -105,25 +107,32 @@ def process_frame(img, frame, face_cascade):
     # Loop through all the faces detected and determine whether or not they are in the database
     identities = []
     for (x, y, w, h) in faces:
-        x1 = x-PADDING
-        y1 = y-PADDING
-        x2 = x+w+PADDING
-        y2 = y+h+PADDING
+        left = x-PADDING
+        top = y-PADDING
+        right = x+w+PADDING
+        bottom = y+h+PADDING
 
-        img = cv2.rectangle(frame,(x1, y1),(x2, y2),(255,0,0),2)
-
-        identity = find_identity(frame, x1, y1, x2, y2)
+        img = cv2.rectangle(frame,(left, top),(right, bottom),(255,0,0),2)
+        identity = find_identity(frame, left, top, right, bottom)
 
         if identity is not None:
             identities.append(identity)
+            # Draw a label with a name below the face
+            cv2.rectangle(frame, (left, bottom - 15), (right, bottom), (0, 0, 255), cv2.FILLED)
+            font = cv2.FONT_HERSHEY_DUPLEX
+            cv2.putText(frame, identity, (left + 3, bottom - 3), font, 0.5, (255, 255, 255), 1)
+
 
     if identities != []:
         cv2.imwrite('example.png',img)
 
-        ready_to_detect_identity = False
-        pool = Pool(processes=1) 
+        #ready_to_detect_identity = False
+
+        #pool = Pool(processes=1)
         # We run this as a separate process so that the camera feedback does not freeze
-        pool.apply_async(welcome_users, [identities])
+        # Ilya: say the name of the person (works on Windows only)
+        #pool.apply_async(welcome_users, [identities])
+
     return img
 
 
@@ -199,7 +208,7 @@ def welcome_users(identities):
         welcome_message += 'and %s, ' % identities[-1]
         welcome_message += 'have a nice day!'
 
-    windows10_voice_interface.Speak(welcome_message)
+    # windows10_voice_interface.Speak(welcome_message)
 
     # Allow the program to start detecting identities again
     ready_to_detect_identity = True
